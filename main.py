@@ -1,25 +1,4 @@
 
-one = [0, 3, 12, 15]
-two = [1, 2, 4, 7, 8, 11, 13, 14]
-three = [5, 6, 9, 10]
-
-
-def check_valid(board, leaf):
-    if leaf == 1:
-        for pos in one:
-            if board[pos] == '0':
-                return pos
-    elif leaf == 2:
-        for pos in two:
-            if board[pos] == '0':
-                return pos
-    elif leaf == 3:
-        for pos in three:
-            if board[pos] == '0':
-                return pos
-    else:
-        return None
-
 
 def check_end(board):
     # 0
@@ -79,104 +58,81 @@ def check_end(board):
     elif board.count('0') == 0:
         return True, 'tie'
     else:
-        return False, None
+        return False, 'tie'
 
 
-def next_move(board, team):
-    if team == 'x':
-        best_score = -5
-        best_pos = None
-        for x in range(1, 4):
-            pos = check_valid(board, x)
-            if pos is not None:
-                board[pos] = 'x'
-                score = minimax(board, 'o', 0)
-                board[pos] = '0'
-                if score > best_score:
-                    best_pos = pos
-        return best_pos
-    if team == 'o':
-        best_score = 5
-        best_pos = None
-        for x in range(1, 4):
-            pos = check_valid(board, x)
-            if pos is not None:
-                board[pos] = 'x'
-                score = minimax(board, 'o', 0)
-                board[pos] = '0'
-                if score < best_score:
-                    best_pos = pos
-        return best_pos
+def next_move(board, team, other, depth):
+    best_score = -5
+    best_pos = None
+    for pos in range(0, 16):
+        if board[pos] == '0':
+            board[pos] = team
+            score = minimax(board, False, team, other, depth)
+            board[pos] = '0'
+            if score > best_score:
+                best_pos = pos
+                best_score = score
+    return best_pos
 
 
-def minimax(board, team, depth) -> int:
-    depth += 1
+def minimax(board, max_player, team, other, depth) -> int:
     res = check_end(board)
-    if res[0]:
-        if res[1] == 'o':
+    if res[0] or depth == 0:
+        if res[1] == other:
             return -1
-        elif res[1] == 'x':
+        elif res[1] == team:
             return 1
         elif res[1] == 'tie':
             return 0
-    if team == 'x':
-        best_score = -5
-        for x in range(1, 4):
-            pos = check_valid(board, x)
-            if pos is not None:
+    if max_player:
+        best_score = -100
+        for pos in range(0, 16):
+            if board[pos] == '0':
                 board[pos] = team
-                score = minimax(board, 'o', depth)
-                best_score = max(score, best_score)
+                best_score = max(minimax(board, False, team, other, depth - 1), best_score)
                 board[pos] = '0'
         return best_score
-    if team == 'o':
-        best_score = 5
-        for x in range(1, 4):
-            pos = check_valid(board, x)
-            if pos is not None:
-                board[pos] = team
-                score = minimax(board, 'x', depth)
-                best_score = min(score, best_score)
+    if not max_player:
+        best_score = 100
+        for pos in range(0, 16):
+            if board[pos] == '0':
+                board[pos] = other
+                best_score = min(minimax(board, True, team, other, depth - 1), best_score)
                 board[pos] = '0'
         return best_score
+
+
+def printboard(board):
+    print(board[0:4])
+    print(board[4:8])
+    print(board[8:12])
+    print(board[12:16])
+    print('\n')
 
 
 def main():
-    winner = ''
+    depth = 5
     board = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
     player1 = 'x'
     player2 = 'o'
     turn = 1
-    print(f"Next round this is turn {turn}")
-    print(board[0:4])
-    print(board[4:8])
-    print(board[8:12])
-    print(board[12:16])
-    print('\n')
+    print(f"This is turn {turn}")
     while True:
         if turn % 2 != 0:
-            board[next_move(board, player1)] = player1
+            best_pos = next_move(board, player1, player2, depth)
+            board[best_pos] = player1
         if turn % 2 == 0:
-            board[next_move(board, player2)] = player2
+            best_pos = next_move(board, player2, player1, depth)
+            board[best_pos] = player2
         res = check_end(board)
         if res[0]:
             winner = res[1]
             break
-        print(f"Next round this is turn {turn}")
-        print(board[0:4])
-        print(board[4:8])
-        print(board[8:12])
-        print(board[12:16])
-        print('\n')
+        printboard(board)
         turn += 1
 
-    print(f"the results are: {winner}")
-    print(f"Next round this is turn {turn}")
-    print(board[0:4])
-    print(board[4:8])
-    print(board[8:12])
-    print(board[12:16])
-    print('\n')
+    print(f"the winner is: {winner}")
+    printboard(board)
 
 
 # Press the green button in the gutter to run the script.
