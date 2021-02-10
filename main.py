@@ -58,48 +58,105 @@ def check_end(board):
     elif board.count('0') == 0:
         return True, 'tie'
     else:
-        return False, 'tie'
+        return False, ''
 
 
 def next_move(board, team, other, depth):
     best_score = -5
     best_pos = None
+    count = 0
     for pos in range(0, 16):
         if board[pos] == '0':
             board[pos] = team
-            score = minimax(board, False, team, other, depth)
+            (score, count) = minimax(board, False, team, other, count + 1, depth - 1)
             board[pos] = '0'
             if score > best_score:
                 best_pos = pos
                 best_score = score
-    return best_pos
+    return best_pos, count
 
 
-def minimax(board, max_player, team, other, depth) -> int:
+def minimax(board, max_player, team, other, count, depth) -> tuple:
     res = check_end(board)
-    if res[0] or depth == 0:
+    if res[0] or depth <= 0:
         if res[1] == other:
-            return -1
+            return -1, count
         elif res[1] == team:
-            return 1
+            return 1, count
         elif res[1] == 'tie':
-            return 0
+            return 0, count
+        else:
+            return 0, count
     if max_player:
         best_score = -100
         for pos in range(0, 16):
             if board[pos] == '0':
                 board[pos] = team
-                best_score = max(minimax(board, False, team, other, depth - 1), best_score)
+                (current, count) = minimax(board, False, team, other, count + 1, depth - 1)
+                best_score = max(current, best_score)
                 board[pos] = '0'
-        return best_score
+        return best_score, count
     if not max_player:
         best_score = 100
         for pos in range(0, 16):
             if board[pos] == '0':
                 board[pos] = other
-                best_score = min(minimax(board, True, team, other, depth - 1), best_score)
+                (current, count) = minimax(board, True, team, other, count + 1, depth - 1)
+                best_score = min(current, best_score)
                 board[pos] = '0'
-        return best_score
+        return best_score, count
+
+
+def alphabetanext_move(board, team, other, depth):
+    best_score = -5
+    best_pos = None
+    count = 0
+    for pos in range(0, 16):
+        if board[pos] == '0':
+            board[pos] = team
+            (score, count) = alphabetaminimax(board, False, team, other, depth - 1,  -100, 100, count + 1)
+            board[pos] = '0'
+            if score > best_score:
+                best_pos = pos
+                best_score = score
+    return best_pos, count
+
+
+def alphabetaminimax(board, max_player, team, other, depth, alpha, beta, count) -> tuple:
+    res = check_end(board)
+    if res[0] or depth <= 0:
+        if res[1] == other:
+            return -1, count
+        elif res[1] == team:
+            return 1, count
+        elif res[1] == 'tie':
+            return 0, count
+        else:
+            return 0, count
+    if max_player:
+        best_score = -100
+        for pos in range(0, 16):
+            if board[pos] == '0':
+                board[pos] = team
+                (current, count) = alphabetaminimax(board, False, team, other, depth - 1, alpha, beta, count + 1)
+                best_score = max(current, best_score)
+                board[pos] = '0'
+                alpha = max(alpha, current)
+                if beta <= alpha:
+                    break
+        return best_score, count
+    if not max_player:
+        best_score = 100
+        for pos in range(0, 16):
+            if board[pos] == '0':
+                board[pos] = other
+                (current, count) = alphabetaminimax(board, True, team, other, depth - 1, alpha, beta, count + 1)
+                best_score = min(current, best_score)
+                board[pos] = '0'
+                beta = min(beta, current)
+                if beta <= alpha:
+                    break
+        return best_score, count
 
 
 def printboard(board):
@@ -113,26 +170,53 @@ def printboard(board):
 def main():
     depth = 5
     board = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+    alphaboard = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
     player1 = 'x'
     player2 = 'o'
     turn = 1
+    total_x, total_y = 0,0
     print(f"This is turn {turn}")
     while True:
         if turn % 2 != 0:
-            best_pos = next_move(board, player1, player2, depth)
+            (best_pos, count) = next_move(board, player1, player2, 5)
+            total_x += count
             board[best_pos] = player1
         if turn % 2 == 0:
-            best_pos = next_move(board, player2, player1, depth)
+            (best_pos, count) = next_move(board, player2, player1, 5)
+            total_y += count
             board[best_pos] = player2
         res = check_end(board)
         if res[0]:
             winner = res[1]
             break
-        printboard(board)
+        # printboard(board)
         turn += 1
 
-    print(f"the winner is: {winner}")
+    print(f"the winner is: {winner} and was completed in x:{total_x}, o:{total_y} boards")
     printboard(board)
+
+    turn = 1
+    print(f"This is alphabeta pruning turn {turn}")
+    alphabeta_total_x = 0
+    alphabeta_total_y = 0
+    while True:
+        if turn % 2 != 0:
+            (best_pos, count) = alphabetanext_move(alphaboard, player1, player2, 5)
+            alphabeta_total_x += count
+            alphaboard[best_pos] = player1
+        if turn % 2 == 0:
+            (best_pos, count) = alphabetanext_move(alphaboard, player2, player1, 5)
+            alphabeta_total_y += count
+            alphaboard[best_pos] = player2
+        res = check_end(alphaboard)
+        if res[0]:
+            winner = res[1]
+            break
+        # printboard(alphaboard)
+        turn += 1
+
+    print(f"the winner is: {winner} and was completed in x:{alphabeta_total_x}, o:{alphabeta_total_y} boards")
+    printboard(alphaboard)
 
 
 # Press the green button in the gutter to run the script.
