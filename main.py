@@ -1,4 +1,5 @@
-
+import random
+import math
 
 def check_end(board):
     # 0
@@ -62,7 +63,7 @@ def check_end(board):
 
 
 def next_move(board, team, other, depth):
-    best_score = -5
+    best_score = -math.inf
     best_pos = None
     count = 0
     for pos in range(0, 16):
@@ -107,14 +108,14 @@ def minimax(board, max_player, team, other, count, depth) -> tuple:
         return best_score, count
 
 
-def alphabetanext_move(board, team, other, depth):
-    best_score = -5
+def alphabeta_next_move(board, team, other, depth):
+    best_score = -math.inf
     best_pos = None
     count = 0
     for pos in range(0, 16):
         if board[pos] == '0':
             board[pos] = team
-            (score, count) = alphabetaminimax(board, False, team, other, depth - 1,  -100, 100, count + 1)
+            (score, count) = alphabeta_minimax(board, False, team, other, depth - 1, -100, 100, count + 1)
             board[pos] = '0'
             if score > best_score:
                 best_pos = pos
@@ -122,7 +123,7 @@ def alphabetanext_move(board, team, other, depth):
     return best_pos, count
 
 
-def alphabetaminimax(board, max_player, team, other, depth, alpha, beta, count) -> tuple:
+def alphabeta_minimax(board, max_player, team, other, depth, alpha, beta, count) -> tuple:
     res = check_end(board)
     if res[0] or depth <= 0:
         if res[1] == other:
@@ -134,11 +135,11 @@ def alphabetaminimax(board, max_player, team, other, depth, alpha, beta, count) 
         else:
             return 0, count
     if max_player:
-        best_score = -100
+        best_score = -math.inf
         for pos in range(0, 16):
             if board[pos] == '0':
                 board[pos] = team
-                (current, count) = alphabetaminimax(board, False, team, other, depth - 1, alpha, beta, count + 1)
+                (current, count) = alphabeta_minimax(board, False, team, other, depth - 1, alpha, beta, count + 1)
                 best_score = max(current, best_score)
                 board[pos] = '0'
                 alpha = max(alpha, current)
@@ -146,11 +147,11 @@ def alphabetaminimax(board, max_player, team, other, depth, alpha, beta, count) 
                     break
         return best_score, count
     if not max_player:
-        best_score = 100
+        best_score = math.inf
         for pos in range(0, 16):
             if board[pos] == '0':
                 board[pos] = other
-                (current, count) = alphabetaminimax(board, True, team, other, depth - 1, alpha, beta, count + 1)
+                (current, count) = alphabeta_minimax(board, True, team, other, depth - 1, alpha, beta, count + 1)
                 best_score = min(current, best_score)
                 board[pos] = '0'
                 beta = min(beta, current)
@@ -167,56 +168,117 @@ def printboard(board):
     print('\n')
 
 
+def random_move(board):
+    while True:
+        move = random.randint(0, 15)
+        if board[move] == '0':
+            return move
+
+
+def game(player1, player2, gamemode, pflag, gamecount, depth):
+    winners = []
+    x_boards = 0
+    y_boards = 0
+    while gamecount > 0:
+        board = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+        turn = 1
+        total_x, total_y = 0, 0
+        while True:
+            if pflag:
+                print(f"This is turn {turn}")
+            best_pos, count = None, None
+            if turn % 2 != 0:
+                if gamemode == 1:
+                    (best_pos, count) = next_move(board, player1, player2, depth)
+                if gamemode == 2:
+                    (best_pos, count) = alphabeta_next_move(board, player1, player2, depth)
+                if gamemode == 3:
+                    best_pos = random_move(board)
+                    count = 1
+                if gamemode == 4:
+                    (best_pos, count) = alphabeta_next_move(board, player1, player2, depth)
+                if gamemode == 5:
+                    best_pos = random_move(board)
+                    count = 1
+                total_x += count
+                board[best_pos] = player1
+            if turn % 2 == 0:
+                if gamemode == 1:
+                    (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
+                if gamemode == 2:
+                    (best_pos, count) = next_move(board, player2, player1, depth)
+                if gamemode == 3:
+                    (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
+                if gamemode == 4:
+                    best_pos = random_move(board)
+                    count = 1
+                if gamemode == 5:
+                    (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
+                total_y += count
+                board[best_pos] = player2
+            res = check_end(board)
+            if res[0]:
+                winner = res[1]
+                break
+            if pflag:
+                printboard(board)
+            turn += 1
+        if pflag:
+            print(f"the winner is: {winner} and was completed in x:{total_x}, o:{total_y} boards")
+            printboard(board)
+        winners.append(winner)
+        x_boards += total_x
+        y_boards += total_y
+        gamecount -= 1
+    return winners, x_boards, y_boards
+
+
 def main():
-    depth = 5
-    board = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
-    alphaboard = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
     player1 = 'x'
     player2 = 'o'
-    turn = 1
-    total_x, total_y = 0,0
-    print(f"This is turn {turn}")
-    while True:
-        if turn % 2 != 0:
-            (best_pos, count) = next_move(board, player1, player2, 5)
-            total_x += count
-            board[best_pos] = player1
-        if turn % 2 == 0:
-            (best_pos, count) = next_move(board, player2, player1, 5)
-            total_y += count
-            board[best_pos] = player2
-        res = check_end(board)
-        if res[0]:
-            winner = res[1]
-            break
-        # printboard(board)
-        turn += 1
+    games = 1000
+    depth = 1
+    (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
 
-    print(f"the winner is: {winner} and was completed in x:{total_x}, o:{total_y} boards")
-    printboard(board)
+    depth = 2
+    (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
 
-    turn = 1
-    print(f"This is alphabeta pruning turn {turn}")
-    alphabeta_total_x = 0
-    alphabeta_total_y = 0
-    while True:
-        if turn % 2 != 0:
-            (best_pos, count) = alphabetanext_move(alphaboard, player1, player2, 5)
-            alphabeta_total_x += count
-            alphaboard[best_pos] = player1
-        if turn % 2 == 0:
-            (best_pos, count) = alphabetanext_move(alphaboard, player2, player1, 5)
-            alphabeta_total_y += count
-            alphaboard[best_pos] = player2
-        res = check_end(alphaboard)
-        if res[0]:
-            winner = res[1]
-            break
-        # printboard(alphaboard)
-        turn += 1
+    depth = 3
+    (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
 
-    print(f"the winner is: {winner} and was completed in x:{alphabeta_total_x}, o:{alphabeta_total_y} boards")
-    printboard(alphaboard)
+    depth = 4
+    (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+
+    depth = 5
+    (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+
+    depth = 6
+    (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+
+    depth = 8
+    (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+
 
 
 # Press the green button in the gutter to run the script.
