@@ -1,5 +1,7 @@
 import random
 import math
+import mcts
+
 
 def check_end(board):
     # 0
@@ -200,19 +202,34 @@ def game(player1, player2, gamemode, pflag, gamecount, depth):
                 if gamemode == 5:
                     best_pos = random_move(board)
                     count = 1
+                if gamemode == 6:
+                    tree = mcts.MCTS(board, player1, 60)
+                    move = tree.search()
+                    best_pos = int(tree.best_move)
+                    count = move.parent.count
+                if gamemode == 7:
+                    tree = mcts.MCTS(board, player1, 60)
+                    move = tree.search()
+                    best_pos = int(tree.best_move)
+                    count = move.parent.count
                 total_x += count
                 board[best_pos] = player1
             if turn % 2 == 0:
                 if gamemode == 1:
                     (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
                 if gamemode == 2:
-                    (best_pos, count) = next_move(board, player2, player1, depth)
+                    (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
                 if gamemode == 3:
                     (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
                 if gamemode == 4:
                     best_pos = random_move(board)
                     count = 1
                 if gamemode == 5:
+                    (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
+                if gamemode == 6:
+                    best_pos = random_move(board)
+                    count = 1
+                if gamemode == 7:
                     (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
                 total_y += count
                 board[best_pos] = player2
@@ -236,50 +253,50 @@ def game(player1, player2, gamemode, pflag, gamecount, depth):
 def main():
     player1 = 'x'
     player2 = 'o'
-    games = 1000
-    depth = 1
-    (ret, x, o) = game(player1, player2, 4, False, games, depth)
-    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 5, False, games, depth)
-    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    games = 1
+    depth = 7
+    # (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    # (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    #
+    # depth = 2
+    # (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    # (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    #
+    # depth = 3
+    # (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    # (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    #
+    # depth = 4
+    # (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    # (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    #
+    # depth = 5
+    # (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    # (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    #
+    # depth = 6
+    # (ret, x, o) = game(player1, player2, 4, False, games, depth)
+    # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    # (ret, x, o) = game(player1, player2, 5, False, games, depth)
+    # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
 
-    depth = 2
-    (ret, x, o) = game(player1, player2, 4, False, games, depth)
-    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 5, False, games, depth)
-    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-
-    depth = 3
-    (ret, x, o) = game(player1, player2, 4, False, games, depth)
-    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 5, False, games, depth)
-    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-
-    depth = 4
-    (ret, x, o) = game(player1, player2, 4, False, games, depth)
-    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 5, False, games, depth)
-    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-
-    depth = 5
-    (ret, x, o) = game(player1, player2, 4, False, games, depth)
-    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 5, False, games, depth)
-    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-
-    depth = 6
-    (ret, x, o) = game(player1, player2, 4, False, games, depth)
-    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 5, False, games, depth)
-    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-
-    depth = 8
-    (ret, x, o) = game(player1, player2, 4, False, games, depth)
-    print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 5, False, games, depth)
-    print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-
-
+    # depth = 16
+    # (ret, x, o) = game(player1, player2, 2, False, games, depth)
+    # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    # (ret, x, o) = game(player1, player2, 2, False, games, depth)
+    # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
+    (ret, x, o) = game(player1, player2, 7, True, 1, depth)
+    print(ret)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
