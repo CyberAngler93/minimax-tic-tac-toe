@@ -1,7 +1,8 @@
 import random
 import math
 import mcts
-
+import time
+import copy
 
 def check_end(board):
     # 0
@@ -169,6 +170,11 @@ def printboard(board):
     print(board[12:16])
     print('\n')
 
+def get_human(board):
+    human = input('pick a valid move 0-15: ')
+    while board[int(human)] != '0':
+        human = input('Invalid move pick again: ')
+    return int(human)
 
 def random_move(board):
     while True:
@@ -177,15 +183,18 @@ def random_move(board):
             return move
 
 
-def game(player1, player2, gamemode, pflag, gamecount, depth):
+def game(player1, player2, gamemode, pflag, rflag, gamecount, depth):
     winners = []
     x_boards = 0
     y_boards = 0
+    save_game = []
     while gamecount > 0:
         board = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
         turn = 1
         total_x, total_y = 0, 0
         while True:
+            if rflag:
+                save_game.append(copy.deepcopy(board))
             if pflag:
                 print(f"This is turn {turn}")
             best_pos, count = None, None
@@ -203,15 +212,21 @@ def game(player1, player2, gamemode, pflag, gamecount, depth):
                     best_pos = random_move(board)
                     count = 1
                 if gamemode == 6:
-                    tree = mcts.MCTS(board, player1, 60)
+                    start = time.time()
+                    tree = mcts.MCTS(board, player1, 30)
                     move = tree.search()
+                    end = time.time() - start
                     best_pos = int(tree.best_move)
                     count = move.parent.count
+                    print(f"Search finsihed in  {end} and went through {count} boards to find the move")
                 if gamemode == 7:
-                    tree = mcts.MCTS(board, player1, 60)
+                    start = time.time()
+                    tree = mcts.MCTS(board, player1, 30)
                     move = tree.search()
+                    end = time.time() - start
                     best_pos = int(tree.best_move)
                     count = move.parent.count
+                    print(f"Search finsihed in  {end} and went through {count} boards to find the move")
                 total_x += count
                 board[best_pos] = player1
             if turn % 2 == 0:
@@ -227,10 +242,14 @@ def game(player1, player2, gamemode, pflag, gamecount, depth):
                 if gamemode == 5:
                     (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
                 if gamemode == 6:
-                    best_pos = random_move(board)
+                    human_move = get_human(board)
+                    best_pos = int(human_move)
                     count = 1
                 if gamemode == 7:
+                    start = time.time()
                     (best_pos, count) = alphabeta_next_move(board, player2, player1, depth)
+                    end = time.time() - start
+                    print(f"Search finsihed in  {end} and went through {count} boards to find the move")
                 total_y += count
                 board[best_pos] = player2
             res = check_end(board)
@@ -243,6 +262,13 @@ def game(player1, player2, gamemode, pflag, gamecount, depth):
         if pflag:
             print(f"the winner is: {winner} and was completed in x:{total_x}, o:{total_y} boards")
             printboard(board)
+        if rflag:
+            with open('save_game.txt', 'w+') as f:
+                for moves in save_game:
+                    movestr = ''
+                    f.write(movestr.join(moves))
+                    f.write('\n')
+                f.close()
         winners.append(winner)
         x_boards += total_x
         y_boards += total_y
@@ -250,11 +276,24 @@ def game(player1, player2, gamemode, pflag, gamecount, depth):
     return winners, x_boards, y_boards
 
 
+def replay(file):
+    count = 1
+    with open(file, 'r') as f:
+        for line in f:
+            print(f"Move {count}")
+            print(line[0:4])
+            print(line[4:8])
+            print(line[8:12])
+            print(line[12:])
+            count += 1
+
+
 def main():
+    file = 'save_game.txt'
     player1 = 'x'
     player2 = 'o'
     games = 1
-    depth = 7
+    depth = 10
     # (ret, x, o) = game(player1, player2, 4, False, games, depth)
     # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
     # (ret, x, o) = game(player1, player2, 5, False, games, depth)
@@ -295,8 +334,14 @@ def main():
     # print(f"{games} games were played with x as alphabeta at depth {depth}, o as random player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
     # (ret, x, o) = game(player1, player2, 2, False, games, depth)
     # print(f"{games} games were played with x as random at depth {depth}, o as alphabeta player and the results were x:{ret.count('x')} and evaluated an average of {x/1000} boards, o:{ret.count('o')} and evaluated an average of {o/1000} boards, tie:{ret.count('tie')}")
-    (ret, x, o) = game(player1, player2, 7, True, 1, depth)
+    print('MCTS vs Human')
+    (ret, x, o) = game(player1, player2, 6, True, True, 1, depth)
     print(ret)
+    print('MCTS vs Alphabeta')
+    (ret, x, o) = game(player1, player2, 7, True, True, 1, depth)
+    print(ret)
+    print('Replay')
+    replay(file)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

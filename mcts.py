@@ -114,7 +114,7 @@ class MCTS:
         self.root = Node(initial_state, None, player)
         self.best_move = None
         self.time = sec
-        self.exploration_constant = 5
+        self.exploration_constant = 1
 
     def search(self):
         start = time.time()
@@ -127,7 +127,7 @@ class MCTS:
     def traverse(self, node):
         while node.is_terminal is not True:
             if node.is_expanded:
-                node = self.get_best_move(self.root)
+                node = self.get_best_move(node)
             else:
                 return self.expand(node)
         return node
@@ -153,9 +153,9 @@ class MCTS:
         while node.is_terminal is not True:
             node.make_move()
         if node.winner == 'x':
-            return 1 * node.count
+            return 1
         elif node.winner == 'o':
-            return -1 * node.count
+            return -1
         elif node.winner == 'tie':
             return 0
 
